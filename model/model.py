@@ -124,16 +124,20 @@ class Net(nn.Module):
         stylized_1, stylized_2, stylized_3 = self.GNN(stylized_1, stylized_2, stylized_3)
 
         stylized = torch.cat((stylized_1, stylized_2, stylized_3), 0)
-        content_feats = torch.cat((content1_feats, content2_feats, content3_feats), 0)
+        content_feats_l3 = torch.cat((content1_feats[3], content2_feats[3], content3_feats[3]), 0)
+        content_feats_l4 = torch.cat((content1_feats[4], content2_feats[4], content3_feats[4]), 0)
         # decoder
         g_t = self.decoder(stylized)
 
         # compute loss
         g_t_feats = self.encode_with_intermediate(g_t)
-        loss_c = self.calc_content_loss(g_t_feats[3], content_feats[3], norm=True) + self.calc_content_loss(
-            g_t_feats[4], content_feats[4], norm=True)
+        loss_c = self.calc_content_loss(g_t_feats[3], content_feats_l3, norm=True) + self.calc_content_loss(
+            g_t_feats[4], content_feats_l4, norm=True)
+
+        style_feats[0] = torch.cat((style_feats[0], style_feats[0], style_feats[0]), 0)
         loss_s = self.calc_style_loss(g_t_feats[0], style_feats[0])
         for i in range(1, 5):
+            style_feats[i] = torch.cat((style_feats[i], style_feats[i], style_feats[i]), 0)
             loss_s += self.calc_style_loss(g_t_feats[i], style_feats[i])
 
         # """IDENTITY LOSSES"""
