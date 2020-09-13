@@ -4,7 +4,7 @@ from torch.nn import init
 
 class ConvGRUCell(nn.Module):
 
-    def __init__(self, input_size, hidden_size, all_dim, kernel_size):
+    def __init__(self, input_size, hidden_size, kernel_size):
         super(ConvGRUCell, self).__init__()
         self.input_size = input_size
         self.cuda_flag = True
