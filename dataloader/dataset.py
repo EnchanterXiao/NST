@@ -49,6 +49,13 @@ def train_transform2():
     ]
     return transforms.Compose(transform_list)
 
+def test_transform():
+    transform_list = [
+        transforms.Resize(size=(512, 512)),
+        transforms.ToTensor()
+    ]
+    return transforms.Compose(transform_list)
+
 class FlatFolderDataset(data.Dataset):
     def __init__(self, root, transform):
         super(FlatFolderDataset, self).__init__()

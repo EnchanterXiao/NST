@@ -60,8 +60,8 @@ class Net(nn.Module):
         self.GNN = GNN(all_channel=512)
         self.decoder = decoder
         if (start_iter > 0):
-            self.transform.load_state_dict(torch.load('weight/transformer_iter_' + str(start_iter) + '.pth'))
-            self.decoder.load_state_dict(torch.load('weight/decoder_iter_' + str(start_iter) + '.pth'))
+            self.transform.load_state_dict(torch.load('/home/lwq/sdb1/xiaoxin/code/SANT_weight/transformer_iter_' + str(start_iter) + '.pth'))
+            self.decoder.load_state_dict(torch.load('/home/lwq/sdb1/xiaoxin/code/SANT_weight/decoder_iter_' + str(start_iter) + '.pth'))
         self.mse_loss = nn.MSELoss()
         self.variation_loss = nn.L1Loss()
         # fix the encoder
@@ -116,6 +116,7 @@ class Net(nn.Module):
         content1_feats = self.encode_with_intermediate(content1)
         content2_feats = self.encode_with_intermediate(content2)
         content3_feats = self.encode_with_intermediate(content3)
+        #stylized_1, stylized_2, stylized_3 = self.GNN(stylized_1, stylized_2, stylized_3)
 
         # feature fusion & propagation
         stylized_1 = self.transform(content1_feats[3], style_feats[3], content1_feats[4], style_feats[4])

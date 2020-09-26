@@ -21,8 +21,8 @@ import torchvision.models as models
 
 def adjust_learning_rate(optimizer, iteration_count):
     """Imitating the original implementation"""
-    lr = args.lr / (1.0 + args.lr_decay * iteration_count)
     for param_group in optimizer.param_groups:
+        lr = param_group['lr'] / (1.0 + args.lr_decay * iteration_count)
         param_group['lr'] = lr
 
 
@@ -35,21 +35,22 @@ parser.add_argument('--style_dir', type=str, default='/home/lwq/sdb1/xiaoxin/dat
 parser.add_argument('--vgg', type=str, default='/home/lwq/sdb1/xiaoxin/code/SANT_weight/vgg_normalised.pth')
 
 # training options
-parser.add_argument('--save_dir', default='./experiments',
+parser.add_argument('--save_dir', default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiments',
                     help='Directory to save the model')
-parser.add_argument('--log_dir', default='./logs',
+parser.add_argument('--log_dir', default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/logs',
                     help='Directory to save the log')
 parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--lr_decay', type=float, default=5e-5)
-parser.add_argument('--max_iter', type=int, default=500000)
+parser.add_argument('--max_iter', type=int, default=650000)
 parser.add_argument('--batch_size', type=int, default=4)
 parser.add_argument('--style_weight', type=float, default=3.0)
 parser.add_argument('--content_weight', type=float, default=1.0)
 parser.add_argument('--n_threads', type=int, default=16)
-parser.add_argument('--save_model_interval', type=int, default=50000)
-parser.add_argument('--start_iter', type=float, default=0)
+parser.add_argument('--save_model_interval', type=int, default=10000)
+parser.add_argument('--start_iter', type=float, default=500000)
 args = parser.parse_args('')
-args.content_dir = '/home/lwq/sdb1/xiaoxin/data/DAVIS'
+#args.content_dir = '/home/lwq/sdb1/xiaoxin/data/DAVIS'
+args.content_dir = '/home/lwq/sdb1/xiaoxin/data/YoutubeVOS'
 
 device = torch.device('cuda')
 
@@ -82,22 +83,26 @@ style_iter = iter(data.DataLoader(
     num_workers=args.n_threads))
 
 optimizer = torch.optim.Adam([
-                              {'params': network.decoder.parameters()},
-                              {'params': network.transform.parameters()}], lr=args.lr)
+                              {'params': network.decoder.parameters(), 'lr':1*args.lr},
+                              {'params': network.transform.parameters(), 'lr':1 *args.lr},
+                              {'params': network.GNN.parameters(), 'lr':10*args.lr}],
+                              lr=args.lr)
 
 if(args.start_iter > 0):
-    optimizer.load_state_dict(torch.load('optimizer_iter_' + str(args.start_iter) + '.pth'))
+    if os.path.exists('optimizer_iter_' + str(args.start_iter) + '.pth'):
+        optimizer.load_state_dict(torch.load('optimizer_iter_' + str(args.start_iter) + '.pth'))
 
-writer = SummaryWriter('runs/loss')
+writer = SummaryWriter('/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/runs/loss')
 
 for i in tqdm(range(args.start_iter, args.max_iter)):
     adjust_learning_rate(optimizer, iteration_count=i)
     content_images = next(content_iter)
     content_image1 = content_images['content0'].to(device)
+    #print(content_image1.shape)
     content_image2 = content_images['content1'].to(device)
     content_image3 = content_images['content2'].to(device)
     style_images = next(style_iter).to(device)
-    # loss_c, loss_s, l_identity1, l_identity2, T_loss = network(content_images,
+    # loss_c, loss_s, l_identity1, l_identity2, = network(content_images,
     #                                                            content_images,
     #                                                            content_images,
     #                                                            style_images)
@@ -114,7 +119,9 @@ for i in tqdm(range(args.start_iter, args.max_iter)):
     loss.backward()
     optimizer.step()
 
-    if (i + 1) % args.save_model_interval == 0 or (i + 1) == args.max_iter:
+    if (i+1) % args.save_model_interval == 0 or (i + 1) == args.max_iter:
+        if not os.path.exists(args.save_dir):
+            os.makedirs(args.save_dir)
         state_dict = decoder.state_dict()
         for key in state_dict.keys():
             state_dict[key] = state_dict[key].to(torch.device('cpu'))
@@ -126,6 +133,12 @@ for i in tqdm(range(args.start_iter, args.max_iter)):
             state_dict[key] = state_dict[key].to(torch.device('cpu'))
         torch.save(state_dict,
                    '{:s}/transformer_iter_{:d}.pth'.format(args.save_dir,
+                                                           i + 1))
+        state_dict = network.GNN.state_dict()
+        for key in state_dict.keys():
+            state_dict[key] = state_dict[key].to(torch.device('cpu'))
+        torch.save(state_dict,
+                   '{:s}/GNN_iter_{:d}.pth'.format(args.save_dir,
                                                            i + 1))
         state_dict = optimizer.state_dict()
         torch.save(state_dict,

@@ -31,6 +31,10 @@ class DAVISLoader(data.Dataset):
                 ])
         else:
             self.data_dir = os.path.join(data_root, 'Test')
+            self.augment_transform = transforms.Compose([
+                tr.Resize(scales=(512, 512)),
+                tr.ToTensor()
+            ])
 
         # Load Videos
         self.videos = []
@@ -81,7 +85,7 @@ class DAVISLoader(data.Dataset):
 
 
 if __name__ == '__main__':
-    data = DAVISLoader(data_root='/home/lwq/sdb1/xiaoxin/data/DAVIS', num_sample=3, Training=True)
+    data = DAVISLoader(data_root='/home/lwq/sdb1/xiaoxin/data/YoutubeVOS', num_sample=3, Training=True)
     # data = DAVISLoader(data_root='/home/lwq/sdb1/xiaoxin/data/DAVIS', num_sample=3, Training=False)
     samples = data.__getitem__(0)
     for i in samples:
