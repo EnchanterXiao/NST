@@ -94,6 +94,9 @@ class CoattentionModel(nn.Module):
         self.gate_s = nn.Sigmoid()
         self.ConvGRU = ConvGRU.ConvGRUCell(all_channel, all_channel, kernel_size=1)
         self.conv_fusion = nn.Conv2d(all_channel * 2, all_channel, kernel_size=3, padding=1, bias=True)
+        self.conv1 = nn.Conv2d(all_channel * 2, all_channel, kernel_size=3, padding=1, bias=True)
+        self.prelu = nn.ReLU(inplace=True)
+        self.bn1 = nn.BatchNorm2d(all_channel)
         self.propagate_layers = 3
 
         for m in self.modules():
@@ -131,9 +134,9 @@ class CoattentionModel(nn.Module):
                 query1 = h_v3.clone()
 
                 if passing_round == self.propagate_layers - 1:
-                    x1s[ii, :, :, :] = self.conv_fusion_output(torch.cat([h_v1, input1[ii, :, :, :][None].contiguous()], 1))
-                    x2s[ii, :, :, :] = self.conv_fusion_output(torch.cat([h_v2, input2[ii, :, :, :][None].contiguous()], 1))
-                    x3s[ii, :, :, :] = self.conv_fusion_output(torch.cat([h_v3, input3[ii, :, :, :][None].contiguous()], 1))
+                    x1s[ii, :, :, :] = self.my_fcn(h_v1, input1[ii, :, :, :][None].contiguous())
+                    x2s[ii, :, :, :] = self.my_fcn(h_v2, input2[ii, :, :, :][None].contiguous())
+                    x3s[ii, :, :, :] = self.my_fcn(h_v3, input3[ii, :, :, :][None].contiguous())
 
         return x1s, x2s, x3s
 
@@ -152,5 +155,14 @@ class CoattentionModel(nn.Module):
         input1_mask = self.gate(input1_att)
         input1_mask = self.gate_s(input1_mask)
         input1_att = input1_att * input1_mask
+
+        return input1_att
+
+    def my_fcn(self, input1_att, exemplar):  # exemplar,
+
+        input1_att = torch.cat([input1_att, exemplar], 1)
+        input1_att = self.conv1(input1_att)
+        input1_att = self.bn1(input1_att)
+        input1_att = self.prelu(input1_att)
 
         return input1_att

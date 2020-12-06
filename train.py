@@ -46,7 +46,7 @@ parser.add_argument('--batch_size', type=int, default=4)
 parser.add_argument('--style_weight', type=float, default=1.0)
 parser.add_argument('--content_weight', type=float, default=1.0)
 parser.add_argument('--n_threads', type=int, default=16)
-parser.add_argument('--save_model_interval', type=int, default=10000)
+parser.add_argument('--save_model_interval', type=int, default=50000)
 parser.add_argument('--start_iter', type=float, default=0)
 args = parser.parse_args('')
 #args.content_dir = '/home/lwq/sdb1/xiaoxin/data/DAVIS'
