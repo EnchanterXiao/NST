@@ -7,7 +7,7 @@ from model.VGG import VGG
 from model.Decoder import Decoder
 from model.Transform import *
 from model.SANet import *
-from model.GNN import GNN
+from model.GNN import GNN,CoattentionModel
 
 
 affine_par = True
@@ -57,7 +57,8 @@ class Net(nn.Module):
         self.enc_5 = nn.Sequential(*list(vgg.children())[31:44])  # relu4_1 -> relu5_1
         # transform
         self.transform = Transform(in_planes=512)
-        self.GNN = GNN(all_channel=512)
+        self.GNN = CoattentionModel(all_channel=512)
+        self.GNN_2 = CoattentionModel(all_channel=512)
         self.decoder = decoder
         if (start_iter > 0):
             self.transform.load_state_dict(torch.load('/home/lwq/sdb1/xiaoxin/code/SANT_weight/transformer_iter_' + str(start_iter) + '.pth'))
@@ -116,13 +117,16 @@ class Net(nn.Module):
         content1_feats = self.encode_with_intermediate(content1)
         content2_feats = self.encode_with_intermediate(content2)
         content3_feats = self.encode_with_intermediate(content3)
-        #stylized_1, stylized_2, stylized_3 = self.GNN(stylized_1, stylized_2, stylized_3)
+        gcontent1_feats, gcontent2_feats, gcontent3_feats = self.GNN(content1_feats[3], content2_feats[3],
+                                                                          content3_feats[3])
+
+        ggcontent1_feats, ggcontent2_feats, ggcontent3_feats = self.GNN_2(content1_feats[4], content2_feats[4],
+                                                                           content3_feats[4])
 
         # feature fusion & propagation
-        stylized_1 = self.transform(content1_feats[3], style_feats[3], content1_feats[4], style_feats[4])
-        stylized_2 = self.transform(content2_feats[3], style_feats[3], content2_feats[4], style_feats[4])
-        stylized_3 = self.transform(content3_feats[3], style_feats[3], content3_feats[4], style_feats[4])
-        stylized_1, stylized_2, stylized_3 = self.GNN(stylized_1, stylized_2, stylized_3)
+        stylized_1 = self.transform(gcontent1_feats, style_feats[3], ggcontent1_feats, style_feats[4])
+        stylized_2 = self.transform(gcontent2_feats, style_feats[3], ggcontent2_feats, style_feats[4])
+        stylized_3 = self.transform(gcontent3_feats, style_feats[3], ggcontent3_feats, style_feats[4])
 
         stylized = torch.cat((stylized_1, stylized_2, stylized_3), 0)
         content_feats_l3 = torch.cat((content1_feats[3], content2_feats[3], content3_feats[3]), 0)
@@ -140,16 +144,5 @@ class Net(nn.Module):
         for i in range(1, 5):
             style_feats[i] = torch.cat((style_feats[i], style_feats[i], style_feats[i]), 0)
             loss_s += self.calc_style_loss(g_t_feats[i], style_feats[i])
-
-        # """IDENTITY LOSSES"""
-        # Icc = self.decoder(self.transform(content_feats[3], content_feats[3], content_feats[4], content_feats[4]))
-        # Iss = self.decoder(self.transform(style_feats[3], style_feats[3], style_feats[4], style_feats[4]))
-        # l_identity1 = self.calc_content_loss(Icc, content) + self.calc_content_loss(Iss, style)
-        # Fcc = self.encode_with_intermediate(Icc)
-        # Fss = self.encode_with_intermediate(Iss)
-        # l_identity2 = self.calc_content_loss(Fcc[0], content_feats[0]) + self.calc_content_loss(Fss[0], style_feats[0])
-        # for i in range(1, 5):
-        #     l_identity2 += self.calc_content_loss(Fcc[i], content_feats[i]) + self.calc_content_loss(Fss[i],
-        #                                                                                              style_feats[i])
 
         return loss_c, loss_s

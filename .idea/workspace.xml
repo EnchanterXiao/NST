@@ -2,12 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6203d33c-83cc-4b18-808d-9a5803cc9896" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/dataloader/dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/dataset.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dataloader/davis.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/davis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/ConvGRU.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/ConvGRU.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/GNN.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/GNN.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/Transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/Transform.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sanet_eval.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/NST_GNN.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/NST_GNN.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -32,8 +31,8 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../cvpr21-vos/cvpr21-vos" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyIntegratedToolsModulesConfigurable" />
   </component>
   <component name="RunManager" selected="Python.train">
     <configuration name="davis" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -70,6 +69,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="sanet_eval" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="NST_GNN" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sanet_eval.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -120,11 +140,29 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="pytest in SANet_eval.py" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="NST_GNN" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_parameters" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/SANet_eval.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.train" />
-        <item itemvalue="Python.davis" />
+        <item itemvalue="Python.sanet_eval" />
+        <item itemvalue="Python tests.pytest in SANet_eval.py" />
         <item itemvalue="Python.test" />
+        <item itemvalue="Python.davis" />
       </list>
     </recent_temporary>
   </component>
@@ -140,29 +178,33 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state x="776" y="370" width="424" height="484" key="FileChooserDialogImpl" timestamp="1601116962899">
+    <state x="451" y="270" width="1084" height="710" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1601209372187">
       <screen x="67" y="27" width="1853" height="1173" />
     </state>
-    <state x="776" y="370" width="424" height="484" key="FileChooserDialogImpl/67.27.1853.1173@67.27.1853.1173" timestamp="1601116962899" />
-    <state width="1830" height="318" key="GridCell.Tab.0.bottom" timestamp="1601120637915">
+    <state x="451" y="270" width="1084" height="710" key="#com.intellij.execution.impl.EditConfigurationsDialog/67.27.1853.1173@67.27.1853.1173" timestamp="1601209372187" />
+    <state x="776" y="370" width="424" height="484" key="FileChooserDialogImpl" timestamp="1602225364271">
       <screen x="67" y="27" width="1853" height="1173" />
     </state>
-    <state width="1830" height="318" key="GridCell.Tab.0.bottom/67.27.1853.1173@67.27.1853.1173" timestamp="1601120637915" />
-    <state width="1830" height="318" key="GridCell.Tab.0.center" timestamp="1601120637913">
+    <state x="776" y="370" width="424" height="484" key="FileChooserDialogImpl/67.27.1853.1173@67.27.1853.1173" timestamp="1602225364271" />
+    <state width="1830" height="318" key="GridCell.Tab.0.bottom" timestamp="1601211555497">
       <screen x="67" y="27" width="1853" height="1173" />
     </state>
-    <state width="1830" height="318" key="GridCell.Tab.0.center/67.27.1853.1173@67.27.1853.1173" timestamp="1601120637913" />
-    <state width="1830" height="318" key="GridCell.Tab.0.left" timestamp="1601120637911">
+    <state width="1830" height="318" key="GridCell.Tab.0.bottom/67.27.1853.1173@67.27.1853.1173" timestamp="1601211555497" />
+    <state width="1830" height="318" key="GridCell.Tab.0.center" timestamp="1601211555496">
       <screen x="67" y="27" width="1853" height="1173" />
     </state>
-    <state width="1830" height="318" key="GridCell.Tab.0.left/67.27.1853.1173@67.27.1853.1173" timestamp="1601120637911" />
-    <state width="1830" height="318" key="GridCell.Tab.0.right" timestamp="1601120637914">
+    <state width="1830" height="318" key="GridCell.Tab.0.center/67.27.1853.1173@67.27.1853.1173" timestamp="1601211555496" />
+    <state width="1830" height="318" key="GridCell.Tab.0.left" timestamp="1601211555496">
       <screen x="67" y="27" width="1853" height="1173" />
     </state>
-    <state width="1830" height="318" key="GridCell.Tab.0.right/67.27.1853.1173@67.27.1853.1173" timestamp="1601120637914" />
-    <state x="482" y="247" key="SettingsEditor" timestamp="1601120324533">
+    <state width="1830" height="318" key="GridCell.Tab.0.left/67.27.1853.1173@67.27.1853.1173" timestamp="1601211555496" />
+    <state width="1830" height="318" key="GridCell.Tab.0.right" timestamp="1601211555497">
       <screen x="67" y="27" width="1853" height="1173" />
     </state>
-    <state x="482" y="247" key="SettingsEditor/67.27.1853.1173@67.27.1853.1173" timestamp="1601120324533" />
+    <state width="1830" height="318" key="GridCell.Tab.0.right/67.27.1853.1173@67.27.1853.1173" timestamp="1601211555497" />
+    <state x="482" y="247" key="SettingsEditor" timestamp="1601209424851">
+      <screen x="67" y="27" width="1853" height="1173" />
+    </state>
+    <state x="482" y="247" key="SettingsEditor/67.27.1853.1173@67.27.1853.1173" timestamp="1601209424851" />
   </component>
 </project>

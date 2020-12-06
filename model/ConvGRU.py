@@ -40,7 +40,7 @@ class ConvGRUCell(nn.Module):
         stacked_inputs = torch.cat([input_, prev_state], dim=1)
         update = torch.sigmoid(self.update_gate(stacked_inputs))
         reset = torch.sigmoid(self.reset_gate(stacked_inputs))
-        #out_inputs = torch.tanh(self.out_gate(torch.cat([input_, prev_state * reset], dim=1)))
+        out_inputs = torch.tanh(self.out_gate(torch.cat([input_, prev_state * reset], dim=1)))
         out_inputs = self.out_gate(torch.cat([input_, prev_state * reset], dim=1))
         new_state = prev_state * (1 - update) + out_inputs * update
 

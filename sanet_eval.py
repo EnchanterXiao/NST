@@ -31,10 +31,10 @@ parser.add_argument('--style', type=str, default='style/style11.jpg',
                     images separated by commas if you want to do style \
                     interpolation or spatial control')
 parser.add_argument('--steps', type=str, default=1)
-parser.add_argument('--vgg', type=str, default='/home/lwq/sdb1/xiaoxin/code/SANT_weight/vgg_normalised.pth')
-parser.add_argument('--decoder', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiments/decoder_iter_600000.pth')
-parser.add_argument('--transform', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiments/transformer_iter_600000.pth')
-parser.add_argument('--GNN', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiments/GNN_iter_600000.pth')
+parser.add_argument('--vgg', type=str, default='/home/lwq/sdb1/xiaoxin/code/SANeT_weight/vgg_normalised.pth')
+parser.add_argument('--decoder', type=str, default='/home/lwq/sdb1/xiaoxin/code/SANeT_weight/decoder_iter_600000.pth')
+parser.add_argument('--transform', type=str, default='/home/lwq/sdb1/xiaoxin/code/SANeT_weight/transformer_iter_600000.pth')
+
 # Additional options
 parser.add_argument('--save_ext', default='output+',
                     help='The extension name of the output viedo')
@@ -43,31 +43,29 @@ parser.add_argument('--output', type=str, default='output',
 
 # Advanced options
 args = parser.parse_args('')
+args.output = '../result/SANet_600000/'
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if not os.path.exists(args.output):
     os.mkdir(args.output)
 decoder = Decoder('Decoder')
 transform = Transform(in_planes=512)
 vgg = VGG('VGG19')
-GNN = GNN(all_channel=512)
 
 decoder.eval()
 transform.eval()
 vgg.eval()
-GNN.eval()
 
 # decoder.features.load_state_dict(torch.load(args.decoder))
 decoder.load_state_dict(torch.load(args.decoder))
 transform.load_state_dict(torch.load(args.transform))
 vgg.features.load_state_dict(torch.load(args.vgg))
-GNN.load_state_dict(torch.load(args.GNN))
 
 enc_1 = nn.Sequential(*list(vgg.features.children())[:4])  # input -> relu1_1
 enc_2 = nn.Sequential(*list(vgg.features.children())[4:11])  # relu1_1 -> relu2_1
 enc_3 = nn.Sequential(*list(vgg.features.children())[11:18])  # relu2_1 -> relu3_1
 enc_4 = nn.Sequential(*list(vgg.features.children())[18:31])  # relu3_1 -> relu4_1
 enc_5 = nn.Sequential(*list(vgg.features.children())[31:44])  # relu4_1 -> relu5_1
-
 
 enc_1.to(device)
 enc_2.to(device)
@@ -76,8 +74,6 @@ enc_4.to(device)
 enc_5.to(device)
 transform.to(device)
 decoder.to(device)
-GNN.to(device)
-
 
 style_tf = test_transform()
 style = style_tf(Image.open(args.style))
@@ -93,8 +89,6 @@ for i, batch in enumerate(content_dataloader):
         seq = batch['seq_name']
         fps = 0
     content_image1 = batch['content0'].to(device)
-    content_image2 = batch['content1'].to(device)
-    content_image3 = batch['content2'].to(device)
 
     with torch.no_grad():
         start = time.time()
@@ -104,21 +98,9 @@ for i, batch in enumerate(content_dataloader):
 
         Content4_1 = enc_4(enc_3(enc_2(enc_1(content_image1))))
         Content5_1 = enc_5(Content4_1)
-        # print(Style4_1.shape, Style5_1.shape)
-        # print(Content4_1.shape, Content5_1.shape)
+
         Stylised1 = transform(Content4_1, Style4_1, Content5_1, Style5_1)
-
-        Content4_1 = enc_4(enc_3(enc_2(enc_1(content_image2))))
-        Content5_1 = enc_5(Content4_1)
-        Stylised2 = transform(Content4_1, Style4_1, Content5_1, Style5_1)
-
-        Content4_1 = enc_4(enc_3(enc_2(enc_1(content_image3))))
-        Content5_1 = enc_5(Content4_1)
-        Stylised3 = transform(Content4_1, Style4_1, Content5_1, Style5_1)
-
-        stylised, _, _ = GNN(Stylised1, Stylised2, Stylised3)
-
-        content = decoder(stylised)
+        content = decoder(Stylised1)
 
         end = time.time()
         content.clamp(0, 255)
