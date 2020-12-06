@@ -35,19 +35,19 @@ parser.add_argument('--style_dir', type=str, default='/home/lwq/sdb1/xiaoxin/dat
 parser.add_argument('--vgg', type=str, default='../SANeT_weight/vgg_normalised.pth')
 
 # training options
-parser.add_argument('--save_dir', default='../NST_GNN_result/experiments2',
+parser.add_argument('--save_dir', default='../NST_GNN_result/experiment1',
                     help='Directory to save the model')
-parser.add_argument('--log_dir', default='../NST_GNN_result/logs2',
+parser.add_argument('--log_dir', default='../NST_GNN_result/log1',
                     help='Directory to save the log')
 parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--lr_decay', type=float, default=5e-5)
-parser.add_argument('--max_iter', type=int, default=600000)
+parser.add_argument('--max_iter', type=int, default=500000)
 parser.add_argument('--batch_size', type=int, default=4)
-parser.add_argument('--style_weight', type=float, default=3.0)
+parser.add_argument('--style_weight', type=float, default=1.0)
 parser.add_argument('--content_weight', type=float, default=1.0)
 parser.add_argument('--n_threads', type=int, default=16)
 parser.add_argument('--save_model_interval', type=int, default=10000)
-parser.add_argument('--start_iter', type=float, default=500000)
+parser.add_argument('--start_iter', type=float, default=0)
 args = parser.parse_args('')
 #args.content_dir = '/home/lwq/sdb1/xiaoxin/data/DAVIS'
 args.content_dir = '/home/lwq/sdb1/xiaoxin/data/YoutubeVOS'
@@ -85,7 +85,7 @@ style_iter = iter(data.DataLoader(
 optimizer = torch.optim.Adam([
                               {'params': network.decoder.parameters(), 'lr':1*args.lr},
                               {'params': network.transform.parameters(), 'lr':1 *args.lr},
-                              {'params': network.GNN.parameters(), 'lr':10*args.lr}],
+                              {'params': network.GNN.parameters(), 'lr':1*args.lr}],
                               lr=args.lr)
 
 if(args.start_iter > 0):
@@ -106,17 +106,13 @@ for i in tqdm(range(args.start_iter, args.max_iter)):
         content_image2 = content_images['content1'].to(device)
         content_image3 = content_images['content2'].to(device)
     style_images = next(style_iter).to(device)
-    # loss_c, loss_s, l_identity1, l_identity2, = network(content_images,
-    #                                                            content_images,
-    #                                                            content_images,
-    #                                                            style_images)
     loss_c, loss_s = network(content_image1,
                             content_image2,
                             content_image3,
                             style_images)
     loss_c = args.content_weight * loss_c
     loss_s = args.style_weight * loss_s
-    loss = 10*loss_c + loss_s #+ l_identity1 * 50 + l_identity2 * 1
+    loss = loss_c + loss_s
     writer.add_scalar('total loss', loss, global_step=i)
 
     optimizer.zero_grad()
