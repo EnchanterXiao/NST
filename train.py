@@ -92,7 +92,7 @@ if(args.start_iter > 0):
     if os.path.exists('optimizer_iter_' + str(args.start_iter) + '.pth'):
         optimizer.load_state_dict(torch.load('optimizer_iter_' + str(args.start_iter) + '.pth'))
 
-writer = SummaryWriter('/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/runs/loss')
+writer = SummaryWriter(args.log_dir)
 
 for i in tqdm(range(args.start_iter, args.max_iter)):
     adjust_learning_rate(optimizer, iteration_count=i)
