@@ -85,7 +85,8 @@ style_iter = iter(data.DataLoader(
 optimizer = torch.optim.Adam([
                               {'params': network.decoder.parameters(), 'lr':1*args.lr},
                               {'params': network.transform.parameters(), 'lr':1 *args.lr},
-                              {'params': network.GNN.parameters(), 'lr':1*args.lr}],
+                              {'params': network.GNN.parameters(), 'lr':1*args.lr},
+                              {'params': network.GNN_2.parameters(), 'lr':1*args.lr}],
                               lr=args.lr)
 
 if(args.start_iter > 0):

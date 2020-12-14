@@ -31,14 +31,14 @@ parser.add_argument('--style', type=str, default='style/style11.jpg',
                     images separated by commas if you want to do style \
                     interpolation or spatial control')
 parser.add_argument('--steps', type=str, default=1)
-parser.add_argument('--vgg', type=str, default='/home/lwq/sdb1/xiaoxin/code/SANT_weight/vgg_normalised.pth')
-parser.add_argument('--decoder', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiments/decoder_iter_600000.pth')
-parser.add_argument('--transform', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiments/transformer_iter_600000.pth')
-parser.add_argument('--GNN', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiments/GNN_iter_600000.pth')
+parser.add_argument('--vgg', type=str, default='/home/lwq/sdb1/xiaoxin/code/SANeT_weight/vgg_normalised.pth')
+parser.add_argument('--decoder', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/decoder_iter_500000.pth')
+parser.add_argument('--transform', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/transformer_iter_500000.pth')
+parser.add_argument('--GNN', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/GNN_iter_500000.pth')
 # Additional options
 parser.add_argument('--save_ext', default='output+',
                     help='The extension name of the output viedo')
-parser.add_argument('--output', type=str, default='output',
+parser.add_argument('--output', type=str, default='../output',
                     help='Directory to save the output image(s)')
 
 # Advanced options
@@ -49,12 +49,14 @@ if not os.path.exists(args.output):
 decoder = Decoder('Decoder')
 transform = Transform(in_planes=512)
 vgg = VGG('VGG19')
-GNN = GNN(all_channel=512)
+GNN = CoattentionModel(all_channel=512)
+#GNN_2 = GNN(all_channel=512)
 
 decoder.eval()
 transform.eval()
 vgg.eval()
 GNN.eval()
+#GNN_2.eval()
 
 # decoder.features.load_state_dict(torch.load(args.decoder))
 decoder.load_state_dict(torch.load(args.decoder))
@@ -102,23 +104,18 @@ for i, batch in enumerate(content_dataloader):
         Style4_1 = enc_4(enc_3(enc_2(enc_1(style))))
         Style5_1 = enc_5(Style4_1)
 
-        Content4_1 = enc_4(enc_3(enc_2(enc_1(content_image1))))
-        Content5_1 = enc_5(Content4_1)
-        # print(Style4_1.shape, Style5_1.shape)
-        # print(Content4_1.shape, Content5_1.shape)
-        Stylised1 = transform(Content4_1, Style4_1, Content5_1, Style5_1)
+        Content4_1_1 = enc_4(enc_3(enc_2(enc_1(content_image1))))
+        Content4_1_2 = enc_4(enc_3(enc_2(enc_1(content_image2))))
+        Content4_1_3 = enc_4(enc_3(enc_2(enc_1(content_image3))))
 
-        Content4_1 = enc_4(enc_3(enc_2(enc_1(content_image2))))
-        Content5_1 = enc_5(Content4_1)
-        Stylised2 = transform(Content4_1, Style4_1, Content5_1, Style5_1)
+        Content5_1_1 = enc_5(Content4_1_1)
+        Content5_1_2 = enc_5(Content4_1_2)
+        Content5_1_3 = enc_5(Content4_1_3)
+        Content4_1_1, _, _ = GNN(Content4_1_1, Content4_1_2, Content4_1_3)
+        Content5_1_1, _, _ = GNN(Content5_1_1, Content5_1_2, Content5_1_3)
+        Stylised = transform(Content4_1_1, Style4_1, Content5_1_1, Style5_1)
 
-        Content4_1 = enc_4(enc_3(enc_2(enc_1(content_image3))))
-        Content5_1 = enc_5(Content4_1)
-        Stylised3 = transform(Content4_1, Style4_1, Content5_1, Style5_1)
-
-        stylised, _, _ = GNN(Stylised1, Stylised2, Stylised3)
-
-        content = decoder(stylised)
+        content = decoder(Stylised)
 
         end = time.time()
         content.clamp(0, 255)
