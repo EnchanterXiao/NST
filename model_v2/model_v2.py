@@ -6,6 +6,9 @@ import torchvision
 import torch.nn as nn
 import numpy as np
 from torch.autograd import Variable
+from model_v2.VGG import *
+from model_v2.Decoder import *
+from model_v2.Transform import *
 
 
 def conv_block(name, in_C, out_C, activation='ReLU', kernel_size=3, stride=1, padding=1, transpose=False):
@@ -31,60 +34,51 @@ def conv_block(name, in_C, out_C, activation='ReLU', kernel_size=3, stride=1, pa
 
     return block
 
+class NSTNet(nn.Module):
+    def __init__(self, start_iter):
+        super(NSTNet, self).__init__()
+        self.content_encoder = VGG('VGG19')
+        self.con_enc_1 = nn.Sequential(*list(self.content_encoder.children())[:4])  # input -> relu1_1
+        self.con_enc_2 = nn.Sequential(*list(self.content_encoder.children())[4:11])  # relu1_1 -> relu2_1
+        self.con_enc_3 = nn.Sequential(*list(self.content_encoder.children())[11:18])  # relu2_1 -> relu3_1
+        self.con_enc_4 = nn.Sequential(*list(self.content_encoder.children())[18:31])  # relu3_1 -> relu4_1
+        self.con_enc_5 = nn.Sequential(*list(self.content_encoder.children())[31:44])  # relu4_1 -> relu5_1
 
-def res_block(name):
-    res_block = nn.Sequential()
-    res_block.add_module(name + '_1', conv_block(name + 'res1', 48, 48))
-    res_block.add_module(name + '_2', conv_block(name + 'res2', 48, 48, activation=''))
-    return res_block
+        self.style_encoder = VGG('VGG19')
+        self.sty_enc_1 = nn.Sequential(*list(self.style_encoder.children())[:4])  # input -> relu1_1
+        self.sty_enc_2 = nn.Sequential(*list(self.style_encoder.children())[4:11])  # relu1_1 -> relu2_1
+        self.sty_enc_3 = nn.Sequential(*list(self.style_encoder.children())[11:18])  # relu2_1 -> relu3_1
+        self.sty_enc_4 = nn.Sequential(*list(self.style_encoder.children())[18:31])  # relu3_1 -> relu4_1
+        self.sty_enc_5 = nn.Sequential(*list(self.style_encoder.children())[31:44])  # relu4_1 -> relu5_1
 
-class Encoder(nn.Module):
-    def __init__(self, name):
-        super(Encoder, self).__init__()
-        self.layer1 = conv_block(name + ' 1', 3, 16)
-        self.layer2 = conv_block(name + ' 2', 16, 32, stride=2)
-        self.layer3 = conv_block(name + ' 3', 32, 48, stride=2)
-        self.res1 = res_block(name + ' ResBlock1')
-        self.res2 = res_block(name + ' ResBlock2')
-        self.res3 = res_block(name + ' ResBlock3')
-        self.res4 = res_block(name + ' ResBlock4')
-        self.res5 = res_block(name + ' ResBlock5')
+        self.transform = Transform(in_planes=512)
+        self.decoder = Decoder('Decoder_v2')
+        if (start_iter > 0):
+            self.transform.load_state_dict(torch.load('/home/lwq/sdb1/xiaoxin/code/SANT_weight/transformer_iter_' + str(start_iter) + '.pth'))
+            self.decoder.load_state_dict(torch.load('/home/lwq/sdb1/xiaoxin/code/SANT_weight/decoder_iter_' + str(start_iter) + '.pth'))
 
+    def extract_content_fea(self, content_img):
+        pass
 
-class StyleNet(nn.Module):
-    def __init__(self):
-        super(StyleNet, self).__init__()
-        name = "StyleNet"
+    def extract_style_fea(self, style_img):
+        pass
 
-        self.layer1 = conv_block(name + ' 1', 3, 16)
-        self.layer2 = conv_block(name + ' 2', 16, 32, stride=2)
-        self.layer3 = conv_block(name + ' 3', 32, 48, stride=2)
-        self.res1 = res_block(name + ' ResBlock1')
-        self.res2 = res_block(name + ' ResBlock2')
-        self.res3 = res_block(name + ' ResBlock3')
-        self.res4 = res_block(name + ' ResBlock4')
-        self.res5 = res_block(name + ' ResBlock5')
-        self.layer4 = conv_block(name + ' 4', 48, 32, stride=2, transpose=True)
-        self.layer5 = conv_block(name + ' 5', 32, 16, stride=2, transpose=True)
-        self.layer6 = conv_block(name + ' 6', 16, 3, activation='Tanh')
+    def forward(self, content_img, style_img):
+        content_feas = self.extract_content_fea(content_img)
+        content_feas_s = self.extract_content_fea(style_img)
+        style_feas = self.extract_style_fea(style_img)
 
-    def forward(self, x):
-        out1 = self.layer1(x)
-        out2 = self.layer2(out1)
-        out3 = self.layer3(out2)
-        res1 = self.res1(out3)
-        res2 = self.res2(res1)
-        res3 = self.res3(res2)
-        res4 = self.res4(res3)
-        res5 = self.res5(res4)
-        out4 = self.layer4(res5)
-        out5 = self.layer5(out4)
-        out6 = self.layer6(out5)
-        return out6
+        stylized_fea = self.transform(content_feas[3],content_feas_s[3], style_feas[3],
+                                      content_feas[4],content_feas_s[4], style_feas[4])
+        stylized_img = self.decoder(stylized_fea)
+        return stylized_img
+
+    def compute_loss(self, content_img, style_img):
+        pass
 
 
 if __name__ == '__main__':
-    style_net = StyleNet()
+    style_net = NSTNet()
 
     one = Variable(torch.ones(1, 3, 436, 436))
     res = style_net(one)
