@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 
 cfg = {
-    'Decoder': [256, 'U', 256, 256, 256, 128, 'U', 128, 64, 'U', 64, 3]
+    'Decoder': [256, 'U', 256, 256, 256, 128, 'U', 128, 64, 'U', 64, 3],
+    'Decoder_v2': [512, 'U', 256, 256, 256, 128, 'U', 128, 64, 'U', 64, 3]
 }
 
 class Decoder(nn.Module):
@@ -17,6 +18,7 @@ class Decoder(nn.Module):
     def _make_layers(self, cfg):
         layers = []
         in_channels = 512
+        # in_channels = cfg[0]*2
         for x in cfg:
             if x == 'U':
                 layers += [nn.Upsample(scale_factor=2, mode='nearest')]
