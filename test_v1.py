@@ -32,9 +32,10 @@ parser.add_argument('--style', type=str, default='style/style11.jpg',
                     interpolation or spatial control')
 parser.add_argument('--steps', type=str, default=1)
 parser.add_argument('--vgg', type=str, default='/home/lwq/sdb1/xiaoxin/code/SANeT_weight/vgg_normalised.pth')
-parser.add_argument('--decoder', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/decoder_iter_500000.pth')
-parser.add_argument('--transform', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/transformer_iter_500000.pth')
-parser.add_argument('--GNN', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/GNN_iter_500000.pth')
+parser.add_argument('--decoder', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/decoder_iter_100000.pth')
+parser.add_argument('--transform', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/transformer_iter_100000.pth')
+parser.add_argument('--GNN', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/GNN_iter_100000.pth')
+parser.add_argument('--GNN2', type=str, default='/home/lwq/sdb1/xiaoxin/code/NST_GNN_result/experiment1/GNN2_iter_100000.pth')
 # Additional options
 parser.add_argument('--save_ext', default='output+',
                     help='The extension name of the output viedo')
@@ -50,19 +51,20 @@ decoder = Decoder('Decoder')
 transform = Transform(in_planes=512)
 vgg = VGG('VGG19')
 GNN = CoattentionModel(all_channel=512)
-#GNN_2 = GNN(all_channel=512)
+GNN_2 = CoattentionModel(all_channel=512)
 
 decoder.eval()
 transform.eval()
 vgg.eval()
 GNN.eval()
-#GNN_2.eval()
+GNN_2.eval()
 
 # decoder.features.load_state_dict(torch.load(args.decoder))
 decoder.load_state_dict(torch.load(args.decoder))
 transform.load_state_dict(torch.load(args.transform))
 vgg.features.load_state_dict(torch.load(args.vgg))
 GNN.load_state_dict(torch.load(args.GNN))
+GNN_2.load_state_dict(torch.load(args.GNN2))
 
 enc_1 = nn.Sequential(*list(vgg.features.children())[:4])  # input -> relu1_1
 enc_2 = nn.Sequential(*list(vgg.features.children())[4:11])  # relu1_1 -> relu2_1
@@ -79,6 +81,7 @@ enc_5.to(device)
 transform.to(device)
 decoder.to(device)
 GNN.to(device)
+GNN_2.to(device)
 
 
 style_tf = test_transform()
@@ -112,7 +115,7 @@ for i, batch in enumerate(content_dataloader):
         Content5_1_2 = enc_5(Content4_1_2)
         Content5_1_3 = enc_5(Content4_1_3)
         Content4_1_1, _, _ = GNN(Content4_1_1, Content4_1_2, Content4_1_3)
-        Content5_1_1, _, _ = GNN(Content5_1_1, Content5_1_2, Content5_1_3)
+        Content5_1_1, _, _ = GNN_2(Content5_1_1, Content5_1_2, Content5_1_3)
         Stylised = transform(Content4_1_1, Style4_1, Content5_1_1, Style5_1)
 
         content = decoder(Stylised)
