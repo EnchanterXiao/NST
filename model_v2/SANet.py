@@ -22,6 +22,7 @@ class SANet(nn.Module):
     def __init__(self):
         super(SANet, self).__init__()
         name = 'SANet'
+        self.sm = nn.Softmax(dim=-1)
 
     def forward(self, content, content_s, style):
         b, c, h, w = content.size()

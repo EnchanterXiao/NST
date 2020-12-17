@@ -15,22 +15,24 @@ class VGG19(nn.Module):
         super(VGG19, self).__init__()
         features = self._make_layers(cfg['VGG19'], batch_norm=True)
         model_list = list(features.children())
+        # for i in range(len(model_list)):
+        #     print(i, model_list[i])
         self.conv1_1 = model_list[0]
-        self.conv1_2 = model_list[2]
-        self.conv2_1 = model_list[5]
-        self.conv2_2 = model_list[7]
-        self.conv3_1 = model_list[10]
-        self.conv3_2 = model_list[12]
-        self.conv3_3 = model_list[14]
-        self.conv3_4 = model_list[16]
-        self.conv4_1 = model_list[19]
-        self.conv4_2 = model_list[21]
-        self.conv4_3 = model_list[23]
-        self.conv4_4 = model_list[25]
-        self.conv5_1 = model_list[28]
-        self.conv5_2 = model_list[30]
-        self.conv5_3 = model_list[32]
-        self.conv5_4 = model_list[34]
+        self.conv1_2 = model_list[3]
+        self.conv2_1 = model_list[7]
+        self.conv2_2 = model_list[10]
+        self.conv3_1 = model_list[14]
+        self.conv3_2 = model_list[17]
+        self.conv3_3 = model_list[20]
+        self.conv3_4 = model_list[23]
+        self.conv4_1 = model_list[27]
+        self.conv4_2 = model_list[30]
+        self.conv4_3 = model_list[33]
+        self.conv4_4 = model_list[36]
+        self.conv5_1 = model_list[40]
+        self.conv5_2 = model_list[43]
+        self.conv5_3 = model_list[46]
+        self.conv5_4 = model_list[49]
         if init_weights:
             self._initialize_weights()
 
@@ -38,29 +40,30 @@ class VGG19(nn.Module):
         out = {}
         out['conv1_1'] = F.relu(self.conv1_1(x))
         out['conv1_2'] = F.relu(self.conv1_2(out['conv1_1']))
-        out['pool1'] = F.max_pool2d(out['conv1_2'])
+        out['pool1'] = F.max_pool2d(out['conv1_2'], kernel_size=2, stride=2)
 
         out['conv2_1'] = F.relu(self.conv2_1(out['pool1']))
         out['conv2_2'] = F.relu(self.conv2_2(out['conv2_1']))
-        out['pool2'] = F.max_pool2d(out['conv2_2'])
+        out['pool2'] = F.max_pool2d(out['conv2_2'], kernel_size=2, stride=2)
 
         out['conv3_1'] = F.relu(self.conv3_1(out['pool2']))
         out['conv3_2'] = F.relu(self.conv3_2(out['conv3_1']))
         out['conv3_3'] = F.relu(self.conv3_3(out['conv3_2']))
         out['conv3_4'] = F.relu(self.conv3_4(out['conv3_3']))
-        out['pool3'] = F.max_pool2d(out['conv3_4'])
+        out['pool3'] = F.max_pool2d(out['conv3_4'], kernel_size=2, stride=2)
 
         out['conv4_1'] = F.relu(self.conv4_1(out['pool3']))
         out['conv4_2'] = F.relu(self.conv4_2(out['conv4_1']))
         out['conv4_3'] = F.relu(self.conv4_3(out['conv4_2']))
         out['conv4_4'] = F.relu(self.conv4_4(out['conv4_3']))
-        out['pool4'] = F.max_pool2d(out['conv4_4'])
+        out['pool4'] = F.max_pool2d(out['conv4_4'], kernel_size=2, stride=2)
+        # print(out['pool4'].shape)
 
         out['conv5_1'] = F.relu(self.conv5_1(out['pool4']))
         out['conv5_2'] = F.relu(self.conv5_2(out['conv5_1']))
         out['conv5_3'] = F.relu(self.conv5_3(out['conv5_2']))
         out['conv5_4'] = F.relu(self.conv5_4(out['conv5_3']))
-        out['pool5'] = F.max_pool2d(out['conv5_4'])
+        out['pool5'] = F.max_pool2d(out['conv5_4'], kernel_size=2, stride=2)
 
         # return [out[key] for key in out_key]
         return out

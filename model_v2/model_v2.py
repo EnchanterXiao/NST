@@ -6,9 +6,9 @@ import torchvision
 import torch.nn as nn
 import numpy as np
 from torch.autograd import Variable
-from model_v2.VGG import *
-from model_v2.Decoder import *
-from model_v2.Transform import *
+from VGG import *
+from Decoder import *
+from Transform import *
 
 def calc_mean_std(feat, eps=1e-5):
     # eps is a small value added to the variance to avoid divide-by-zero.
@@ -37,17 +37,17 @@ def _calc_feat_flatten_mean_std(feat):
 
 
 class NSTNet(nn.Module):
-    def __init__(self, start_iter):
+    def __init__(self, start_iter=0):
         super(NSTNet, self).__init__()
-        self.content_encoder = VGG19
-        self.style_encoder = VGG19
+        self.content_encoder = VGG19()
+        self.style_encoder = VGG19()
         self.transform = Transform(in_planes=512)
         self.decoder = Decoder('Decoder_v2')
 
-        self.loss_net = VGG19
-        state_dict = torch.load('https://download.pytorch.org/models/vgg19_bn-c79401a0.pth')
-        state_dict = {k: v for k, v in state_dict.items() if 'class' not in k}
-        self.loss_net.load_state_dict(state_dict)
+        self.loss_net = VGG19()
+        # state_dict = torch.load('https://download.pytorch.org/models/vgg19_bn-c79401a0.pth')
+        # state_dict = {k: v for k, v in state_dict.items() if 'class' not in k}
+        # self.loss_net.load_state_dict(state_dict)
 
         if (start_iter > 0):
             self.transform.load_state_dict(
@@ -68,8 +68,16 @@ class NSTNet(nn.Module):
         stylized_img = self.decoder(stylized_fea)
 
         #计算loss
-        loss = 0
-        return loss
+        gt_con_feats = self.content_encoder(stylized_img)
+        loss_c = self.calc_content_loss(gt_con_feats['conv4_1'], content_feas['conv4_1'], norm=True) + self.calc_content_loss(
+            gt_con_feats['conv5_1'], content_feas['conv5_1'], norm=True)
+
+        gt_style_feas = self.style_encoder(stylized_img)
+        loss_s = self.calc_style_loss(gt_style_feas['conv1_1'], style_feas['conv1_1'])
+        for i in ['conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']:
+            loss_s += self.calc_style_loss(gt_style_feas[i], style_feas[i])
+        return loss_c, loss_s
+
 
     def calc_content_loss(self, input, target, norm=False):
         if (norm == False):
@@ -93,6 +101,6 @@ class NSTNet(nn.Module):
 if __name__ == '__main__':
     style_net = NSTNet()
 
-    one = Variable(torch.ones(1, 3, 436, 436))
-    res = style_net(one)
+    one = Variable(torch.ones(1, 3, 256, 256))
+    res = style_net(one, one)
     print(style_net)
