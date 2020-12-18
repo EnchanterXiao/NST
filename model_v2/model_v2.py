@@ -63,6 +63,7 @@ class NSTNet(nn.Module):
         content_feas = self.content_encoder(content_img)
         content_feas_s = self.content_encoder(style_img)
         style_feas = self.style_encoder(style_img)
+        style_feas_c = self.style_encoder(content_img)
         stylized_fea = self.transform(content_feas['conv4_1'], content_feas_s['conv4_1'], style_feas['conv4_1'],
                                       content_feas['conv5_1'], content_feas_s['conv5_1'], style_feas['conv5_1'])
         stylized_img = self.decoder(stylized_fea)
@@ -76,7 +77,20 @@ class NSTNet(nn.Module):
         loss_s = self.calc_style_loss(gt_style_feas['conv1_1'], style_feas['conv1_1'])
         for i in ['conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']:
             loss_s += self.calc_style_loss(gt_style_feas[i], style_feas[i])
-        return loss_c, loss_s
+
+        """IDENTITY LOSSES"""
+        Icc = self.decoder(self.transform(content_feas['conv4_1'], content_feas['conv4_1'], style_feas_c['conv4_1'],
+                                          content_feas['conv5_1'], content_feas['conv5_1'], style_feas_c['conv5_1']))
+        Iss = self.decoder(self.transform(content_feas_s['conv4_1'], content_feas_s['conv4_1'], style_feas['conv4_1'],
+                                          content_feas_s['conv5_1'], content_feas_s['conv5_1'], style_feas['conv5_1']))
+        l_identity1 = self.calc_content_loss(Icc, content_img) + self.calc_content_loss(Iss, style_img)
+        Fcc = self.content_encoder(Icc)
+        Fss = self.content_encoder(Iss)
+        l_identity2 = self.calc_content_loss(Fcc['conv1_1'], content_feas['conv1_1']) + self.calc_content_loss(Fss['conv1_1'], style_feas_c['conv1_1'])
+        for i in ['conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']:
+            l_identity2 += self.calc_content_loss(Fcc[i], content_feas[i]) + self.calc_content_loss(Fss[i], style_feas_c[i])
+
+        return loss_c, loss_s, l_identity1, l_identity2
 
 
     def calc_content_loss(self, input, target, norm=False):
