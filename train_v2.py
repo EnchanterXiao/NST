@@ -39,7 +39,7 @@ parser.add_argument('--batch_size', type=int, default=4)
 parser.add_argument('--style_weight', type=float, default=3.0)
 parser.add_argument('--content_weight', type=float, default=1.0)
 parser.add_argument('--n_threads', type=int, default=16)
-parser.add_argument('--save_model_interval', type=int, default=50)
+parser.add_argument('--save_model_interval', type=int, default=50000)
 parser.add_argument('--start_iter', type=float, default=0)
 args = parser.parse_args('')
 
@@ -75,7 +75,7 @@ optimizer = torch.optim.Adam([
 if(args.start_iter > 0):
     optimizer.load_state_dict(torch.load('optimizer_iter_' + str(args.start_iter) + '.pth'))
 
-writer = SummaryWriter('runs/loss')
+writer = SummaryWriter(os.path.join(args.save_dir, 'runs/loss'))
 
 for i in tqdm(range(args.start_iter, args.max_iter)):
     adjust_learning_rate(optimizer, iteration_count=i)
