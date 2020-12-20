@@ -6,6 +6,8 @@ import torchvision
 import torch.nn as nn
 import numpy as np
 from torch.autograd import Variable
+import torchvision
+import torch.utils.model_zoo as model_zoo
 from VGG import *
 from Decoder import *
 from Transform import *
@@ -46,8 +48,9 @@ class NSTNet(nn.Module):
 
         self.loss_net = VGG19()
         # state_dict = torch.load('https://download.pytorch.org/models/vgg19_bn-c79401a0.pth')
-        # state_dict = {k: v for k, v in state_dict.items() if 'class' not in k}
-        # self.loss_net.load_state_dict(state_dict)
+        state_dict = model_zoo.load_url('https://download.pytorch.org/models/vgg19_bn-c79401a0.pth')
+        state_dict = {k: v for k, v in state_dict.items() if 'class' not in k}
+        self.loss_net.load_state_dict(state_dict)
 
         if (start_iter > 0):
             self.transform.load_state_dict(
