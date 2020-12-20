@@ -18,7 +18,6 @@ class Decoder(nn.Module):
     def _make_layers(self, cfg):
         layers = []
         in_channels = 512
-        # in_channels = cfg[0]*2
         for x in cfg:
             if x == 'U':
                 layers += [nn.Upsample(scale_factor=2, mode='nearest')]

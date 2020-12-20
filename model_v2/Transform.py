@@ -1,4 +1,4 @@
-from SANet import *
+from .SANet import *
 
 class Transform(nn.Module):
     def __init__(self, in_planes):

@@ -6,11 +6,9 @@ import torchvision
 import torch.nn as nn
 import numpy as np
 from torch.autograd import Variable
-import torchvision
-import torch.utils.model_zoo as model_zoo
-from VGG import *
-from Decoder import *
-from Transform import *
+from .VGG import *
+from .Decoder import *
+from .Transform import *
 
 def calc_mean_std(feat, eps=1e-5):
     # eps is a small value added to the variance to avoid divide-by-zero.
@@ -46,11 +44,7 @@ class NSTNet(nn.Module):
         self.transform = Transform(in_planes=512)
         self.decoder = Decoder('Decoder_v2')
 
-        self.loss_net = VGG19()
-        # state_dict = torch.load('https://download.pytorch.org/models/vgg19_bn-c79401a0.pth')
-        state_dict = model_zoo.load_url('https://download.pytorch.org/models/vgg19_bn-c79401a0.pth')
-        state_dict = {k: v for k, v in state_dict.items() if 'class' not in k}
-        self.loss_net.load_state_dict(state_dict)
+        self.loss_net = VGG19(False)
 
         if (start_iter > 0):
             self.transform.load_state_dict(
@@ -71,27 +65,31 @@ class NSTNet(nn.Module):
                                       content_feas['conv5_1'], content_feas_s['conv5_1'], style_feas['conv5_1'])
         stylized_img = self.decoder(stylized_fea)
 
-        #计算loss
-        gt_con_feats = self.content_encoder(stylized_img)
-        loss_c = self.calc_content_loss(gt_con_feats['conv4_1'], content_feas['conv4_1'], norm=True) + self.calc_content_loss(
-            gt_con_feats['conv5_1'], content_feas['conv5_1'], norm=True)
+        """计算loss"""
+        gt_con_feats = self.loss_net(stylized_img)
+        content_img_feas = self.loss_net(content_img)
+        style_img_feas = self.loss_net(style_img)
 
-        gt_style_feas = self.style_encoder(stylized_img)
-        loss_s = self.calc_style_loss(gt_style_feas['conv1_1'], style_feas['conv1_1'])
+        loss_c = self.calc_content_loss(gt_con_feats['conv4_1'], content_img_feas['conv4_1'], norm=True) + self.calc_content_loss(
+            gt_con_feats['conv5_1'], content_img_feas['conv5_1'], norm=True)
+
+        loss_s = self.calc_style_loss(gt_con_feats['conv1_1'], style_img_feas['conv1_1'])
         for i in ['conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']:
-            loss_s += self.calc_style_loss(gt_style_feas[i], style_feas[i])
+            loss_s += self.calc_style_loss(gt_con_feats[i], style_img_feas[i])
 
         """IDENTITY LOSSES"""
         Icc = self.decoder(self.transform(content_feas['conv4_1'], content_feas['conv4_1'], style_feas_c['conv4_1'],
                                           content_feas['conv5_1'], content_feas['conv5_1'], style_feas_c['conv5_1']))
         Iss = self.decoder(self.transform(content_feas_s['conv4_1'], content_feas_s['conv4_1'], style_feas['conv4_1'],
                                           content_feas_s['conv5_1'], content_feas_s['conv5_1'], style_feas['conv5_1']))
+        Fcc = self.loss_net(Icc)
+        Fss = self.loss_net(Iss)
         l_identity1 = self.calc_content_loss(Icc, content_img) + self.calc_content_loss(Iss, style_img)
-        Fcc = self.content_encoder(Icc)
-        Fss = self.content_encoder(Iss)
-        l_identity2 = self.calc_content_loss(Fcc['conv1_1'], content_feas['conv1_1']) + self.calc_content_loss(Fss['conv1_1'], style_feas_c['conv1_1'])
+        l_identity2 = self.calc_content_loss(Fcc['conv1_1'], content_img_feas['conv1_1']) + \
+                      self.calc_content_loss(Fss['conv1_1'], style_img_feas['conv1_1'])
         for i in ['conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']:
-            l_identity2 += self.calc_content_loss(Fcc[i], content_feas[i]) + self.calc_content_loss(Fss[i], style_feas_c[i])
+            l_identity2 += self.calc_content_loss(Fcc[i], content_img_feas[i]) + \
+                           self.calc_content_loss(Fss[i], style_img_feas[i])
 
         return loss_c, loss_s, l_identity1, l_identity2
 
