@@ -26,15 +26,15 @@ parser.add_argument('--style', type=str, default='./style/*',
                     images separated by commas if you want to do style \
                     interpolation or spatial control')
 parser.add_argument('--steps', type=str, default=1)
-parser.add_argument('--content_encoder', type=str, default='../NST_v2/experiments/content_encoder_iter_350000.pth')
-parser.add_argument('--style_encoder', type=str, default='../NST_v2/experiments/style_encoder_iter_350000.pth')
-parser.add_argument('--decoder', type=str, default='../NST_v2/experiments/decoder_iter_350000.pth')
-parser.add_argument('--transform', type=str, default='../NST_v2/experiments/transformer_iter_350000.pth')
+parser.add_argument('--content_encoder', type=str, default='../NST_v2/experiments3/content_encoder_iter_600000.pth')
+parser.add_argument('--style_encoder', type=str, default='../NST_v2/experiments3/style_encoder_iter_600000.pth')
+parser.add_argument('--decoder', type=str, default='../NST_v2/experiments3/decoder_iter_600000.pth')
+parser.add_argument('--transform', type=str, default='../NST_v2/experiments3/transformer_iter_600000.pth')
 
 # Additional options
 parser.add_argument('--save_ext', default='.jpg',
                     help='The extension name of the output image')
-parser.add_argument('--output', type=str, default='../output',
+parser.add_argument('--output', type=str, default='../output2',
                     help='Directory to save the output image(s)')
 
 # Advanced options

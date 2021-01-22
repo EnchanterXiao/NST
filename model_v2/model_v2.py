@@ -48,13 +48,15 @@ class NSTNet(nn.Module):
 
         if (start_iter > 0):
             self.transform.load_state_dict(
-                torch.load('/home/lwq/sdb1/xiaoxin/code/SANT_weight/transformer_iter_' + str(start_iter) + '.pth'))
+                torch.load('../NST_v2/experiments/transformer_iter_' + str(start_iter) + '.pth'))
             self.decoder.load_state_dict(
-                torch.load('/home/lwq/sdb1/xiaoxin/code/SANT_weight/decoder_iter_' + str(start_iter) + '.pth'))
+                torch.load('../NST_v2/experiments/decoder_iter_' + str(start_iter) + '.pth'))
+            self.content_encoder.load_state_dict(
+                torch.load('../NST_v2/experiments/content_encoder_iter_' + str(start_iter) + '.pth'))
+            self.style_encoder.load_state_dict(
+                torch.load('../NST_v2/experiments/style_encoder_iter_' + str(start_iter) + '.pth'))
 
         self.mse_loss = nn.MSELoss()
-
-
 
     def forward(self, content_img, style_img):
         content_feas = self.content_encoder(content_img)
@@ -92,6 +94,50 @@ class NSTNet(nn.Module):
                            self.calc_content_loss(Fss[i], style_img_feas[i])
 
         return loss_c, loss_s, l_identity1, l_identity2
+
+    def forward_video(self, content_img, content_img2, style_img):
+        content_feas = self.content_encoder(content_img)
+        content_feas_s = self.content_encoder(style_img)
+        style_feas = self.style_encoder(style_img)
+        style_feas_c = self.style_encoder(content_img)
+        stylized_fea = self.transform(content_feas['conv4_1'], content_feas_s['conv4_1'], style_feas['conv4_1'],
+                                      content_feas['conv5_1'], content_feas_s['conv5_1'], style_feas['conv5_1'])
+        stylized_img = self.decoder(stylized_fea)
+
+        content_feas2 = self.content_encoder(content_img2)
+        stylized_fea2 = self.transform(content_feas2['conv4_1'], content_feas_s['conv4_1'], style_feas['conv4_1'],
+                                      content_feas2['conv5_1'], content_feas_s['conv5_1'], style_feas['conv5_1'])
+        stylized_img2 = self.decoder(stylized_fea2)
+
+        """计算loss"""
+        gt_con_feats = self.loss_net(stylized_img)
+        content_img_feas = self.loss_net(content_img)
+        style_img_feas = self.loss_net(style_img)
+
+        loss_c = self.calc_content_loss(gt_con_feats['conv4_1'], content_img_feas['conv4_1'], norm=True) + self.calc_content_loss(
+            gt_con_feats['conv5_1'], content_img_feas['conv5_1'], norm=True)
+
+        loss_s = self.calc_style_loss(gt_con_feats['conv1_1'], style_img_feas['conv1_1'])
+        for i in ['conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']:
+            loss_s += self.calc_style_loss(gt_con_feats[i], style_img_feas[i])
+
+        """IDENTITY LOSSES"""
+        Icc = self.decoder(self.transform(content_feas['conv4_1'], content_feas['conv4_1'], style_feas_c['conv4_1'],
+                                          content_feas['conv5_1'], content_feas['conv5_1'], style_feas_c['conv5_1']))
+        Iss = self.decoder(self.transform(content_feas_s['conv4_1'], content_feas_s['conv4_1'], style_feas['conv4_1'],
+                                          content_feas_s['conv5_1'], content_feas_s['conv5_1'], style_feas['conv5_1']))
+        Fcc = self.loss_net(Icc)
+        Fss = self.loss_net(Iss)
+        l_identity1 = self.calc_content_loss(Icc, content_img) + self.calc_content_loss(Iss, style_img)
+        l_identity2 = self.calc_content_loss(Fcc['conv1_1'], content_img_feas['conv1_1']) + \
+                      self.calc_content_loss(Fss['conv1_1'], style_img_feas['conv1_1'])
+        for i in ['conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']:
+            l_identity2 += self.calc_content_loss(Fcc[i], content_img_feas[i]) + \
+                           self.calc_content_loss(Fss[i], style_img_feas[i])
+
+        loss_t = self.calc_temporal_loss(stylized_img, stylized_img2)
+
+        return loss_c, loss_s, l_identity1, l_identity2, loss_t
 
 
     def calc_content_loss(self, input, target, norm=False):
